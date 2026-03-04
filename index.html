@@ -154,11 +154,19 @@
     };
 
     const imageMap = {
-        "Damon": "p1.png", "Lucy": "p2.png", "Will": "p3.png", "Rob": "p4.png",
-        "Anjeli": "p5.png", "Brian": "p6.png", "Claire": "p7.png", "Bob": "p8.png",
-        "Ryan": "p9.png", "Barry": "p10.png", "Katie": "p11.png", "Jane": "p12.png",
-        "Sam": "p13.png", "Alex": "p14.png", "Chris": "p15.png", "Pat": "p16.png"
+        "Damon": "./p1.png", "Lucy": "./p2.png", "Will": "./p3.png", "Rob": "./p4.png",
+        "Anjeli": "./p5.png", "Brian": "./p6.png", "Claire": "./p7.png", "Bob": "./p8.png",
+        "Ryan": "./p9.png", "Barry": "./p10.png", "Katie": "./p11.png", "Jane": "./p12.png",
+        "Sam": "./p13.png", "Alex": "./p14.png", "Chris": "./p15.png", "Pat": "./p16.png"
     };
+
+    // DEBUGGER: This will alert you in the "Inspect Console" if a file is missing
+    function checkImage(name) {
+        const img = new Image();
+        img.src = imageMap[name];
+        img.onerror = () => console.error(`CRITICAL: Could not find ${imageMap[name]} for ${name}. Check case-sensitivity!`);
+    }
+    Object.keys(imageMap).forEach(checkImage);
 
     const couplesPool = [
         ["Damon", "Lucy"], ["Will", "Rob"], ["Anjeli", "Brian"], ["Claire", "Bob"],
