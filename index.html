@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>The Real Couple: Tournament Edition</title>
+    <title>The Real Couple: Grand Finale</title>
     <style>
         :root {
             --neon-pink: #ff2e63;
             --neon-teal: #08f7fe;
-            --dark-bg: #1a1a2e;
-            --card-bg: rgba(255, 255, 255, 0.1);
-            --yellow-theme: #f9d71c;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --yellow-tee: #f1c40f;
             --correct-green: #00ff88;
         }
 
@@ -17,240 +16,356 @@
             font-family: 'Segoe UI', sans-serif;
             background: radial-gradient(circle at center, #16213e 0%, #0f3460 100%);
             color: white; margin: 0; height: 100vh;
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
         }
 
-        #ui-wrapper { display: flex; gap: 30px; align-items: flex-start; }
+        #ui-wrapper { display: flex; flex-direction: column; align-items: center; width: 95vw; height: 95vh; gap: 5px; }
 
-        .sidebar {
-            background: var(--card-bg); padding: 20px; border-radius: 20px;
-            width: 180px; border: 1px solid rgba(255,255,255,0.1);
+        .scene { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .scene.active { display: flex; }
+
+        .game-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; height: 65vh; justify-content: center; }
+        .row-container { display: flex; justify-content: center; gap: 10px; width: 100%; height: 48%; }
+
+        .couple-slot {
+            display: flex; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 10px; transition: 0.3s; height: 100%; width: 220px; align-items: flex-start; 
         }
 
-        .ep-tab { padding: 10px; margin-bottom: 5px; border-radius: 8px; opacity: 0.3; background: rgba(0,0,0,0.3); }
-        .ep-tab.active { opacity: 1; border: 1px solid var(--neon-teal); box-shadow: 0 0 10px var(--neon-teal); }
-        .ep-tab.done { opacity: 1; color: var(--correct-green); }
-
-        .game-container {
-            background: var(--card-bg); backdrop-filter: blur(10px);
-            padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-            width: 480px; min-height: 500px; display: flex; flex-direction: column; gap: 8px;
-        }
-
-        .row {
-            display: flex; justify-content: space-between; padding: 6px;
-            border-radius: 12px; transition: 0.3s; border: 2px solid transparent;
-            background: rgba(255,255,255,0.05); position: relative; gap: 10px;
-        }
-
-        .row.locked-row { background: rgba(255, 46, 99, 0.4); border-color: var(--neon-pink); }
+        .couple-slot.locked-row { border: 2px solid var(--neon-pink); background: rgba(255, 46, 99, 0.2); box-shadow: 0 0 20px var(--neon-pink); }
         
-        .person-card { 
-            display: flex; align-items: center; padding: 8px; border-radius: 10px; 
-            width: 195px; background: rgba(0,0,0,0.3); cursor: grab; border: 1.5px solid var(--neon-teal);
-        }
+        .person-figure { display: flex; flex-direction: column; align-items: center; width: 100px; height: 100%; cursor: grab; position: relative; }
+        .figure-img { width: 100%; height: 100%; object-fit: contain; object-position: top; pointer-events: none; }
         
-        .avatar { width: 30px; height: 30px; border-radius: 8px; margin-right: 10px; background: var(--yellow-theme); pointer-events: none; }
-        .person-card span { pointer-events: none; font-size: 13px; }
+        .tshirt-label {
+            position: absolute; top: 35%; background: var(--yellow-tee); color: #1a1a2e;
+            font-size: 10px; font-weight: 900; padding: 2px 5px; text-transform: uppercase;
+            border-radius: 2px; pointer-events: none; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10;
+        }
 
-        .controls { margin-top: 15px; text-align: center; }
-        button { padding: 12px 30px; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: none; border-radius: 50px; }
+        .biog-popup {
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            width: 220px; background: rgba(0, 0, 0, 0.95); border: 1px solid var(--neon-teal);
+            padding: 12px; border-radius: 10px; font-size: 0.85rem; line-height: 1.4;
+            color: #eee; pointer-events: none; display: none; z-index: 100;
+            box-shadow: 0 0 20px rgba(8, 247, 254, 0.5);
+        }
+        .person-figure:hover .biog-popup { display: block; }
+
+        .sidebar-mini { display: flex; gap: 8px; margin-bottom: 10px; }
+        .ep-dot { width: 80px; padding: 5px; border-radius: 10px; background: rgba(0,0,0,0.4); font-size: 10px; text-align: center; opacity: 0.4; border: 1px solid white; }
+        .ep-dot.active { opacity: 1; border-color: var(--neon-teal); color: var(--neon-teal); }
+        .ep-dot.done { opacity: 1; color: var(--correct-green); border-color: var(--correct-green); }
+
+        .controls { text-align: center; margin-top: 5px; }
+        button { padding: 12px 30px; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; border: none; border-radius: 50px; transition: 0.2s; }
+        button:hover { transform: scale(1.05); }
         #main-btn { background: var(--neon-teal); color: #1a1a2e; }
+        #main-btn.final-btn { background: var(--neon-pink); color: white; padding: 15px 50px; }
 
-        #start-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
-        }
-
-        .explosion-particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; animation: fly 0.8s forwards; }
-        @keyframes fly { to { transform: translate(var(--x), var(--y)); opacity: 0; } }
+        .full-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 500; text-align: center; padding: 20px; }
+        
+        .red-x-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+        .red-x { position: absolute; width: 100%; height: 10px; background: var(--neon-pink); top: 50%; left: 0; transform: rotate(45deg) scaleX(0); animation: strike 0.5s forwards ease-in-out; }
+        .red-x.alt { transform: rotate(-45deg) scaleX(0); animation-delay: 0.2s; }
+        @keyframes strike { to { transform: rotate(var(--rot)) scaleX(1); } }
     </style>
 </head>
 <body>
 
-<div id="start-overlay" onclick="initGame()">
-    <h1 style="color: var(--neon-teal); letter-spacing: 5px;">THE REAL COUPLE</h1>
-    <p>5 EPISODES. 16 PEOPLE. ONE MISTAKE ENDS IT ALL.</p>
-    <button style="background: var(--neon-pink); color: white; padding: 20px 50px; font-size: 22px;">START SEASON</button>
+<div id="start-scene" class="scene active">
+    <h1 style="color: var(--neon-teal); font-size: 3rem; letter-spacing: 5px;">THE REAL COUPLE</h1>
+    <p>THE ULTIMATE BLUFFING GAME</p>
+    <button onclick="initGame()" style="background: var(--neon-pink); color: white; padding: 20px 50px;">START SEASON</button>
 </div>
 
-<div id="ui-wrapper">
-    <div class="sidebar" id="sidebar">
-        <h3 style="margin-top:0">Season Progress</h3>
-        <div id="ep1" class="ep-tab">Episode 1</div>
-        <div id="ep2" class="ep-tab">Episode 2</div>
-        <div id="ep3" class="ep-tab">Episode 3</div>
-        <div id="ep4" class="ep-tab">Episode 4</div>
-        <div id="ep5" class="ep-tab">Episode 5</div>
-    </div>
+<div id="meet-scene" class="scene">
+    <h2 id="meet-title" style="color: var(--neon-teal);">Meet the Contestants</h2>
+    <p id="meet-instr" style="max-width: 600px; text-align: center; color: #ccc; margin-bottom: 20px; min-height: 3em;"></p>
+    <div id="meet-display" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 30px; height: 350px;"></div>
+    <button id="meet-next-btn" onclick="nextMeetStep()" style="background: var(--neon-teal); color: #1a1a2e;">NEXT</button>
+</div>
 
-    <div class="main-area">
-        <div class="game-container" id="game-board"></div>
+<div id="lineup-scene" class="scene">
+    <h2 id="lineup-title" style="color: var(--neon-teal);">The Lineup</h2>
+    <p id="lineup-instr" style="color: #aaa; margin-bottom: 15px;">Hover over any contestant to examine their profile before the round begins.</p>
+    <div id="lineup-grid" class="game-grid" style="height: 60vh;">
+        <div class="row-container" id="lineup-top"></div>
+        <div class="row-container" id="lineup-bottom"></div>
+    </div>
+    <button id="lineup-play-btn" onclick="changeScene('game')" style="background: var(--neon-pink); color: white; margin-top: 20px;">READY TO PLAY</button>
+</div>
+
+<div id="transition-overlay" style="display:none" class="full-overlay">
+    <h2 id="trans-title" style="color: var(--neon-teal);"></h2>
+    <div id="trans-display" style="display:flex; gap:20px; margin:20px; height: 350px;"></div>
+    <p id="trans-message" style="margin-bottom: 20px; max-width: 600px;"></p>
+    <button id="trans-btn" onclick="handleTransitionNext()" style="background: var(--neon-teal); color: #1a1a2e; padding: 10px 40px;">CONTINUE</button>
+</div>
+
+<div id="game-scene" class="scene">
+    <div id="ui-wrapper">
+        <header>
+            <h1 style="color: var(--neon-teal); font-size: 1.4rem; text-align: center;">THE REAL COUPLE</h1>
+            <div class="sidebar-mini">
+                <div id="ep-1" class="ep-dot">EP 1</div>
+                <div id="ep-2" class="ep-dot">EP 2</div>
+                <div id="ep-3" class="ep-dot">EP 3</div>
+                <div id="ep-4" class="ep-dot">EP 4</div>
+                <div id="ep-5" class="ep-dot">FINALE</div>
+            </div>
+        </header>
+        <div class="game-grid">
+            <div class="row-container" id="grid-row-top"></div>
+            <div class="row-container" id="grid-row-bottom"></div>
+        </div>
         <div class="controls">
-            <p id="guess-count">Guesses: 3 remaining</p>
+            <div id="feedback" style="margin-bottom: 2px; font-weight: bold; font-size: 1.1rem; color: var(--correct-green);"></div>
+            <div id="episode-stats" style="font-size: 0.95rem; color: #fff; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 5px;"></div>
+            <p id="guess-count" style="font-size:0.75rem; color:#aaa; margin-bottom: 5px;">Guesses: 3 remaining</p>
             <button id="main-btn" onclick="handleAction()">Check Pairs</button>
-            <div id="feedback" style="margin-top:10px"></div>
         </div>
     </div>
 </div>
 
 <script>
     const bgMusic = new Audio('jazz.mp3'); bgMusic.loop = true;
-    let audioCtx;
-    
-    // THE POOL: 8 Real Couples
-    const allCouples = [
+    let currentEpisode = 1, activePlayers = [], waitingPool = [], guessesInEpisode = 0, lockedIndex = null, lastFound = [], lastArrivals = [];
+    let meetStep = 0;
+
+    const biogs = {
+        "Damon": "A keen cyclist who loves countryside rides. Obsessed with old vinyl records. Illuminates a room when he walks in.",
+        "Lucy": "Former drama student now in marketing. Loves vintage jewellery and charity finds. Has a natural glow.",
+        "Will": "Software engineer into bouldering and sci-fi. Travelled Japan solo. Has a very strong emotional side.",
+        "Rob": "PE teacher and pub quiz host. Fiercely competitive at board games. Known for iron discipline.",
+        "Anjeli": "Landscape gardener who paints watercolours. Fan of true crime and spicy food. Fond of things that bloom slowly.",
+        "Brian": "Quiet accountant who writes short stories. Swears by morning ice baths. Can make flowers out of mundane situations.",
+        "Claire": "Nurse volunteering at animal shelters. Encyclopaedic knowledge of 90s pop. Has a magnetic pull.",
+        "Bob": "Retired geography teacher restoring furniture. Adopts stray cats. People find him deeply grounding.",
+        "Ryan": "Chef specialising in fermentation. Happiest outdoors on mountain peaks. Personality is sharp but warm.",
+        "Barry": "Landscape photographer catching dawn light. Rewilding advocate. Cuts back anything that doesn't serve a purpose.",
+        "Katie": "Librarian who loves cryptic crosswords. Has kept a journal for 12 years. Humour is dry but perfectly timed.",
+        "Jane": "Architect who sees hidden structures. Brews kombucha. Reputed for being wonderfully witty.",
+        "Sam": "Marine biologist with vintage map collection. Fluent in four languages. Has an explorer's soul.",
+        "Alex": "Journalist who once spent six months embedded with humanitarian missions. Adventurous nature.",
+        "Chris": "Personal trainer who secretly loves ballroom dancing. Can fix almost anything mechanical.",
+        "Pat": "Social worker with a fierce sense of justice and a soft spot for old films. Has run 4 marathons."
+    };
+
+    const imageMap = {
+        "Damon": "p1.png", "Lucy": "p2.png", "Will": "p3.png", "Rob": "p4.png",
+        "Anjeli": "p5.png", "Brian": "p6.png", "Claire": "p7.png", "Bob": "p8.png",
+        "Ryan": "p9.png", "Barry": "p10.png", "Katie": "p11.png", "Jane": "p12.png",
+        "Sam": "p13.png", "Alex": "p14.png", "Chris": "p15.png", "Pat": "p16.png"
+    };
+
+    const couplesPool = [
         ["Damon", "Lucy"], ["Will", "Rob"], ["Anjeli", "Brian"], ["Claire", "Bob"],
         ["Ryan", "Barry"], ["Katie", "Jane"], ["Sam", "Alex"], ["Chris", "Pat"]
     ];
 
-    let currentEpisode = 1;
-    let activePlayers = []; // Those currently on screen
-    let waitingPlayers = []; // Those yet to enter
-    let foundCouples = [];
-    let guessesInEpisode = 0;
-    let lockedIndex = null;
-
     function initGame() {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        bgMusic.play();
-        document.getElementById('start-overlay').style.display = 'none';
+        bgMusic.play().catch(()=>{});
+        document.getElementById('start-scene').classList.remove('active');
         
-        // Setup Episode 1: 10 people (5 rows)
-        // 4 real couples + 2 singles (whose partners are in waiting)
-        const shuffledCouples = [...allCouples].sort(() => Math.random() - 0.5);
+        let shuffledCouples = [...couplesPool].sort(() => Math.random() - 0.5);
+        activePlayers = [...shuffledCouples.slice(0, 4).flat(), shuffledCouples[4][0], shuffledCouples[5][0]];
+        waitingPool = [shuffledCouples[4][1], shuffledCouples[5][1], ...shuffledCouples[6].flat(), ...shuffledCouples[7].flat()].sort(() => Math.random() - 0.5);
         
-        const ep1Couples = shuffledCouples.slice(0, 4); // 8 people
-        const singlesHolders = shuffledCouples.slice(4, 6); // 4 people (we take 1 from each)
-        const inWings = shuffledCouples.slice(6); // 4 people (waiting for later)
-
-        activePlayers = [...ep1Couples.flat(), singlesHolders[0][0], singlesHolders[1][0]];
-        waitingPlayers = [singlesHolders[0][1], singlesHolders[1][1], ...inWings.flat()];
-        
-        startEpisode();
+        changeScene('meet-1');
     }
 
-    function startEpisode() {
-        guessesInEpisode = 0;
-        lockedIndex = null;
-        activePlayers.sort(() => Math.random() - 0.5);
-        
-        // Update Sidebar
-        document.querySelectorAll('.ep-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`ep${currentEpisode}`).classList.add('active');
-        
-        document.getElementById('main-btn').innerText = "Check Pairs";
-        document.getElementById('main-btn').disabled = false;
-        
-        renderBoard();
-        updateFeedback();
-    }
-
-    function renderBoard() {
-        const board = document.getElementById('game-board');
-        board.innerHTML = '';
-        const rowCount = activePlayers.length / 2;
-        
-        for (let i = 0; i < rowCount; i++) {
-            const p1 = activePlayers[i * 2];
-            const p2 = activePlayers[i * 2 + 1];
-            const isLocked = (lockedIndex === i);
-
-            board.innerHTML += `
-                <div class="row ${isLocked ? 'locked-row' : ''}" id="row-${i}" ondblclick="handleLock(${i})">
-                    <div class="person-card" id="card-${i * 2}" draggable="${guessesInEpisode < 2}" ondragstart="drag(e)" ondragover="allowDrop(e)" ondrop="drop(e)">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${p1}&backgroundColor=f9d71c" class="avatar">
-                        <span>${p1}</span>
-                    </div>
-                    <div class="person-card" id="card-${i * 2 + 1}" draggable="${guessesInEpisode < 2}" ondragstart="drag(e)" ondragover="allowDrop(e)" ondrop="drop(e)">
-                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${p2}&backgroundColor=f9d71c" class="avatar">
-                        <span>${p2}</span>
-                    </div>
-                </div>`;
+    function changeScene(sceneId) {
+        document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+        if(sceneId === 'meet-1') {
+            document.getElementById('meet-scene').classList.add('active');
+            meetStep = 1;
+            renderMeet(activePlayers.slice(0, 5), "Here are the first 5 contestants, they are all in a relationship with someone — you have to guess who?");
+        } else if(sceneId === 'lineup') {
+            setupLineup();
+        } else if(sceneId === 'game') {
+            setupGame();
+        } else {
+            document.getElementById(sceneId + '-scene').classList.add('active');
         }
-        setupDragEvents();
     }
 
-    function updateFeedback() {
-        let realInGame = 0;
-        for(let i=0; i<activePlayers.length/2; i++) {
-            if(isRealPair(activePlayers[i*2], activePlayers[i*2+1])) realInGame++;
+    function nextMeetStep() {
+        meetStep++;
+        if(meetStep === 2) {
+            renderMeet(activePlayers, "Now 5 more people arrive, some of them could be dating the others?");
+        } else if(meetStep === 3) {
+            activePlayers.sort(() => Math.random() - 0.5);
+            renderMeet(activePlayers, "They take it in turns to pick a fake partner, but could someone be bluffing and pick their real beau?");
+            document.getElementById('meet-next-btn').innerText = "EXAMINE THE BLUFFS";
+        } else {
+            changeScene('lineup');
         }
-        document.getElementById('feedback').innerText = `Episode ${currentEpisode}: There are hidden real couples on screen.`;
-        document.getElementById('guess-count').innerText = `Guesses: ${3 - guessesInEpisode} remaining`;
+    }
+
+    function setupLineup() {
+        document.getElementById('lineup-scene').classList.add('active');
+        const isFinal = (currentEpisode === 5);
+        document.getElementById('lineup-title').innerText = isFinal ? "GRAND FINALE: THE LINEUP" : `Episode ${currentEpisode} Lineup`;
+        document.getElementById('lineup-instr').innerText = isFinal ? "Pick as many couples as you can! You only have one guess." : "Hover over any contestant to examine their profile before the round begins.";
+        
+        const top = document.getElementById('lineup-top');
+        const bottom = document.getElementById('lineup-bottom');
+        top.innerHTML = ''; bottom.innerHTML = '';
+        const split = Math.ceil((activePlayers.length / 2) / 2);
+
+        for (let i = 0; i < activePlayers.length / 2; i++) {
+            const p1 = activePlayers[i * 2], p2 = activePlayers[i * 2 + 1];
+            const html = createSlotHTML(p1, p2, i, false);
+            if (i < split) top.innerHTML += html;
+            else bottom.innerHTML += html;
+        }
+        document.getElementById('lineup-play-btn').innerText = isFinal ? "GO TO THE FINAL" : "READY TO PLAY";
+    }
+
+    function createSlotHTML(p1, p2, i, isInteractive) {
+        return `
+            <div class="couple-slot ${isInteractive && lockedIndex === i ? 'locked-row' : ''}" id="slot-${i}" ${isInteractive && currentEpisode < 5 ? `ondblclick="handleLock(${i})"` : ''}>
+                <div class="person-figure" id="fig-${i * 2}" draggable="${isInteractive}" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <img src="${imageMap[p1]}" class="figure-img"><span class="tshirt-label">${p1}</span><div class="biog-popup">${biogs[p1]}</div>
+                </div>
+                <div class="person-figure" id="fig-${i * 2 + 1}" draggable="${isInteractive}" ondragstart="drag(event)" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <img src="${imageMap[p2]}" class="figure-img"><span class="tshirt-label">${p2}</span><div class="biog-popup">${biogs[p2]}</div>
+                </div>
+            </div>`;
+    }
+
+    function setupGame() {
+        document.getElementById('game-scene').classList.add('active');
+        guessesInEpisode = 0; lockedIndex = null;
+        document.querySelectorAll('.ep-dot').forEach(d => d.classList.remove('active'));
+        document.getElementById(`ep-${currentEpisode}`).classList.add('active');
+        
+        const mainBtn = document.getElementById('main-btn');
+        if(currentEpisode === 5) {
+            mainBtn.innerText = "Are you sure? You can't go back after you click!";
+            mainBtn.classList.add('final-btn');
+            document.getElementById('guess-count').innerText = "FINAL ROUND - NO HINTS";
+        } else {
+            mainBtn.innerText = "Check Pairs";
+            mainBtn.classList.remove('final-btn');
+            document.getElementById('guess-count').innerText = "Guesses: 3 remaining";
+        }
+        renderGrid();
+        updateStatsDisplay();
+    }
+
+    function renderMeet(list, text) {
+        const display = document.getElementById('meet-display');
+        display.innerHTML = '';
+        document.getElementById('meet-instr').innerText = text;
+        list.forEach(name => {
+            display.innerHTML += `<div class="person-figure" style="height:300px"><img src="${imageMap[name]}" class="figure-img"><span class="tshirt-label">${name}</span><div class="biog-popup">${biogs[name]}</div></div>`;
+        });
+    }
+
+    function renderGrid() {
+        const topRow = document.getElementById('grid-row-top');
+        const bottomRow = document.getElementById('grid-row-bottom');
+        topRow.innerHTML = ''; bottomRow.innerHTML = '';
+        const split = Math.ceil((activePlayers.length / 2) / 2);
+        for (let i = 0; i < activePlayers.length / 2; i++) {
+            const html = createSlotHTML(activePlayers[i * 2], activePlayers[i * 2 + 1], i, true);
+            if (i < split) topRow.innerHTML += html;
+            else bottomRow.innerHTML += html;
+        }
+    }
+
+    function updateStatsDisplay() {
+        let potentialCouples = 0, checked = new Set();
+        activePlayers.forEach(player => {
+            if (!checked.has(player)) {
+                let p = couplesPool.find(pair => pair.includes(player));
+                let partner = p[0] === player ? p[1] : p[0];
+                if (activePlayers.includes(partner)) { potentialCouples++; checked.add(player); checked.add(partner); }
+            }
+        });
+        let randos = activePlayers.length - (potentialCouples * 2);
+        document.getElementById('feedback').innerText = (currentEpisode === 5) ? "GRAND FINALE" : `EPISODE ${currentEpisode}`;
+        if(currentEpisode === 5) {
+             document.getElementById('episode-stats').innerHTML = `Final Match: Arrange all <b>4</b> couples correctly!`;
+        } else {
+             document.getElementById('episode-stats').innerHTML = `<b>${potentialCouples}</b> Real Couples hidden | <b>${randos}</b> Randos`;
+        }
     }
 
     function handleAction() {
+        if(currentEpisode === 5) { validateFinal(); return; }
         if (guessesInEpisode < 2) {
             guessesInEpisode++;
-            let currentCorrect = 0;
-            for(let i=0; i<activePlayers.length/2; i++) {
-                if(isRealPair(activePlayers[i*2], activePlayers[i*2+1])) currentCorrect++;
+            let currentPairsMatched = 0;
+            for(let i=0; i < activePlayers.length/2; i++) {
+                if(isRealPair(activePlayers[i*2], activePlayers[i*2+1])) currentPairsMatched++;
             }
-            document.getElementById('feedback').innerText = `Result: ${currentCorrect} correct couples found.`;
-            if(guessesInEpisode === 2) {
-                document.getElementById('main-btn').innerText = "LOCK & REVEAL";
-                document.getElementById('feedback').innerText = `Final Chance! You have ${currentCorrect} correct. Double-click a row to lock one in.`;
-            }
+            document.getElementById('episode-stats').innerHTML = `Check Result: <b>${currentPairsMatched}</b> pair(s) currently correct.`;
             document.getElementById('guess-count').innerText = `Guesses: ${3 - guessesInEpisode} remaining`;
+            if(guessesInEpisode === 2) document.getElementById('main-btn').innerText = "LOCK & REVEAL";
         } else {
-            if(lockedIndex === null) { alert("Double-click a row to lock it!"); return; }
-            processReveal();
+            if(lockedIndex === null) return alert("Double-click a couple to LOCK!");
+            validateChoice();
         }
     }
 
-    function processReveal() {
-        const p1 = activePlayers[lockedIndex * 2];
-        const p2 = activePlayers[lockedIndex * 2 + 1];
-        
+    function validateFinal() {
+        let totalCorrect = 0;
+        for(let i=0; i < activePlayers.length/2; i++) { if(isRealPair(activePlayers[i*2], activePlayers[i*2+1])) totalCorrect++; }
+        alert(`DRAMATIC REVEAL...\n\nYou identified ${totalCorrect} out of 4 couples correctly.`);
+        location.reload();
+    }
+
+    function isRealPair(n1, n2) { return couplesPool.some(p => (p[0] === n1 && p[1] === n2) || (p[0] === n2 && p[1] === n1)); }
+
+    function validateChoice() {
+        const p1 = activePlayers[lockedIndex * 2], p2 = activePlayers[lockedIndex * 2 + 1];
         if (isRealPair(p1, p2)) {
-            // WIN EPISODE
-            document.getElementById(`ep${currentEpisode}`).classList.add('done');
-            if (currentEpisode < 5) {
-                alert(`SUCCESS! ${p1} & ${p2} are a real couple! Moving to Episode ${currentEpisode + 1}`);
-                // Eliminate the found couple
-                activePlayers = activePlayers.filter(p => p !== p1 && p !== p2);
-                // Add 2 from waiting
-                if(waitingPlayers.length > 0) {
-                    activePlayers.push(waitingPlayers.shift());
-                    activePlayers.push(waitingPlayers.shift());
-                }
-                currentEpisode++;
-                startEpisode();
-            } else {
-                alert("CONGRATULATIONS! You cleared the whole season!");
-                location.reload();
-            }
-        } else {
-            // LOSE GAME
-            alert(`GAME OVER! ${p1} & ${p2} are NOT a real couple. The season ends here.`);
-            location.reload();
-        }
+            document.getElementById(`ep-${currentEpisode}`).classList.add('done');
+            lastFound = [p1, p2];
+            activePlayers = activePlayers.filter(n => n !== p1 && n !== p2);
+            showTransition("elimination");
+        } else { alert("❌ GAME OVER! ❌"); location.reload(); }
     }
 
-    function isRealPair(n1, n2) {
-        return allCouples.some(p => (p[0] === n1 && p[1] === n2) || (p[0] === n2 && p[1] === n1));
-    }
-
-    function handleLock(i) {
-        if(guessesInEpisode === 2) { lockedIndex = i; renderBoard(); }
-    }
-
-    // Drag Logic (Standardized)
-    function setupDragEvents() {
-        document.querySelectorAll('.person-card').forEach(card => {
-            card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text', e.target.id); });
-            card.addEventListener('dragover', (e) => e.preventDefault());
-            card.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const sourceId = e.dataTransfer.getData('text');
-                const sIdx = parseInt(sourceId.split('-')[1]);
-                const tIdx = parseInt(e.target.closest('.person-card').id.split('-')[1]);
-                [activePlayers[sIdx], activePlayers[tIdx]] = [activePlayers[tIdx], activePlayers[sIdx]];
-                renderBoard();
-            });
+    function showTransition(state) {
+        const overlay = document.getElementById('transition-overlay');
+        overlay.style.display = 'flex';
+        const display = document.getElementById('trans-display');
+        display.innerHTML = '';
+        const list = state === "elimination" ? lastFound : lastArrivals;
+        document.getElementById('trans-title').innerText = state === "elimination" ? "ELIMINATED" : "MEET THE NEW ARRIVALS";
+        document.getElementById('trans-title').style.color = state === "elimination" ? "var(--neon-pink)" : "var(--neon-teal)";
+        list.forEach(name => {
+            display.innerHTML += `<div class="person-figure" style="height:100%"><img src="${imageMap[name]}" class="figure-img"><span class="tshirt-label">${name}</span><div class="biog-popup">${biogs[name]}</div>${state === 'elimination' ? '<div class="red-x-container"><div class="red-x" style="--rot:45deg"></div><div class="red-x alt" style="--rot:-45deg"></div></div>' : ''}</div>`;
         });
+        document.getElementById('trans-message').innerText = state === "elimination" ? `${list[0]} & ${list[1]} were a Real Couple!` : "With new players added, deduction becomes harder. Check their biogs!";
+    }
+
+    function handleTransitionNext() {
+        if (document.getElementById('trans-title').innerText === "ELIMINATED") {
+            if (currentEpisode < 4) {
+                lastArrivals = [waitingPool.shift(), waitingPool.shift()];
+                activePlayers.push(...lastArrivals);
+                currentEpisode++; showTransition("arrival");
+            } else { currentEpisode++; document.getElementById('transition-overlay').style.display = 'none'; changeScene('lineup'); }
+        } else { document.getElementById('transition-overlay').style.display = 'none'; changeScene('lineup'); }
+    }
+
+    function handleLock(i) { if(guessesInEpisode === 2) { lockedIndex = i; renderGrid(); } }
+    function allowDrop(e) { e.preventDefault(); }
+    function drag(e) { e.dataTransfer.setData("text", e.target.closest('.person-figure').id); }
+    function drop(e) {
+        e.preventDefault();
+        const sIdx = parseInt(e.dataTransfer.getData("text").split('-')[1]);
+        const tIdx = parseInt(e.target.closest('.person-figure').id.split('-')[1]);
+        [activePlayers[sIdx], activePlayers[tIdx]] = [activePlayers[tIdx], activePlayers[sIdx]];
+        if(document.getElementById('game-scene').classList.contains('active')) renderGrid();
+        else setupLineup();
     }
 </script>
 </body>
